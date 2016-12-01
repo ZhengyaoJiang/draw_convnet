@@ -48,16 +48,16 @@ Dark = 0.3
 Black = 0.
 
 
-def add_layer(patches, colors, size=24, num=5,
+def add_layer(patches, colors, size_row=24,size_col=24, num=5,
               top_left=[0, 0],
               loc_diff=[3, -3],
               ):
     # add a rectangle
     top_left = np.array(top_left)
     loc_diff = np.array(loc_diff)
-    loc_start = top_left - np.array([0, size])
+    loc_start = top_left - np.array([0, size_row])
     for ind in range(num):
-        patches.append(Rectangle(loc_start + ind * loc_diff, size, size))
+        patches.append(Rectangle(loc_start + ind * loc_diff, size_col, size_row))
         if ind % 2:
             colors.append(Medium)
         else:
@@ -98,13 +98,13 @@ def add_mapping(patches, colors, start_ratio, patch_size, ind_bgn,
 
 def label(xy, text, xy_off=[0, 4]):
     plt.text(xy[0] + xy_off[0], xy[1] + xy_off[1], text,
-             family='sans-serif', size=8)
+             family='sans-serif', size=15)
 
 
 if __name__ == '__main__':
 
     fc_unit_size = 2
-    layer_width = 40
+    layer_width = 60
 
     patches = []
     colors = []
@@ -114,58 +114,61 @@ if __name__ == '__main__':
 
     ############################
     # conv layers
-    size_list = [32, 18, 10, 6, 4]
-    num_list = [3, 32, 32, 48, 48]
-    x_diff_list = [0, layer_width, layer_width, layer_width, layer_width]
-    text_list = ['Inputs'] + ['Feature\nmaps'] * (len(size_list) - 1)
-    loc_diff_list = [[3, -3]] * len(size_list)
+    size_list_row = [12, 1]
+    size_list_col = [50, 47]
+    num_list = [1, 12]
+    x_diff_list = [0, layer_width, layer_width/4*3]
+    text_list = ['Inputs'] + ['Feature\nmaps'] * (len(size_list_row) - 1)
+    loc_diff_list = [[3, -3]] * len(size_list_row)
 
     num_show_list = list(map(min, num_list, [NumConvMax] * len(num_list)))
     top_left_list = np.c_[np.cumsum(x_diff_list), np.zeros(len(x_diff_list))]
 
-    for ind in range(len(size_list)):
-        add_layer(patches, colors, size=size_list[ind],
+    for ind in range(len(size_list_row)):
+        add_layer(patches, colors, size_row=size_list_row[ind],
+                  size_col=size_list_col[ind],
                   num=num_show_list[ind],
                   top_left=top_left_list[ind], loc_diff=loc_diff_list[ind])
         label(top_left_list[ind], text_list[ind] + '\n{}@{}x{}'.format(
-            num_list[ind], size_list[ind], size_list[ind]))
+            num_list[ind], size_list_row[ind], size_list_col[ind]), xy_off=[5, 20])
 
 
     ############################
     # in between layers
-    start_ratio_list = [[0.4, 0.5], [0.4, 0.8], [0.4, 0.5], [0.4, 0.8]]
-    patch_size_list = [5, 2, 5, 2]
-    ind_bgn_list = range(len(patch_size_list))
-    text_list = ['Convolution', 'Max-pooling', 'Convolution', 'Max-pooling']
+    start_ratio_list = [[0.4, 0.5]]
+    patch_size_list_row = [12]
+    patch_size_list_col = [4]
+    ind_bgn_list = range(len(patch_size_list_row))
+    text_list = ['Convolution']
 
-    for ind in range(len(patch_size_list)):
+    for ind in range(len(patch_size_list_row)):
         add_mapping(patches, colors, start_ratio_list[ind],
-                    patch_size_list[ind], ind,
-                    top_left_list, loc_diff_list, num_show_list, size_list)
+                    patch_size_list_row[ind], ind,
+                    top_left_list, loc_diff_list, num_show_list, size_list_row)
         label(top_left_list[ind], text_list[ind] + '\n{}x{} kernel'.format(
-            patch_size_list[ind], patch_size_list[ind]), xy_off=[26, -65])
+            patch_size_list_row[ind], patch_size_list_col[ind]), xy_off=[40, -65])
 
 
     ############################
     # fully connected layers
     size_list = [fc_unit_size, fc_unit_size, fc_unit_size]
-    num_list = [768, 500, 2]
+    num_list = [500, 12]
     num_show_list = list(map(min, num_list, [NumFcMax] * len(num_list)))
     x_diff_list = [sum(x_diff_list) + layer_width, layer_width, layer_width]
     top_left_list = np.c_[np.cumsum(x_diff_list), np.zeros(len(x_diff_list))]
     loc_diff_list = [[fc_unit_size, -fc_unit_size]] * len(top_left_list)
-    text_list = ['Hidden\nunits'] * (len(size_list) - 1) + ['Outputs']
+    text_list = ['Hidden\nunits'] * (len(size_list_row) - 1) + ['Outputs']
 
-    for ind in range(len(size_list)):
-        add_layer(patches, colors, size=size_list[ind], num=num_show_list[ind],
+    for ind in range(len(size_list_row)):
+        add_layer(patches, colors, size_col=size_list[ind], size_row=size_list[ind], num=num_show_list[ind],
                   top_left=top_left_list[ind], loc_diff=loc_diff_list[ind])
         label(top_left_list[ind], text_list[ind] + '\n{}'.format(
-            num_list[ind]))
+            num_list[ind]),xy_off=[5, 20])
 
-    text_list = ['Flatten\n', 'Fully\nconnected', 'Fully\nconnected']
+    text_list = ['Flatten\n', 'Fully\nconnected']
 
-    for ind in range(len(size_list)):
-        label(top_left_list[ind], text_list[ind], xy_off=[-10, -65])
+    for ind in range(len(size_list_row)):
+        label(top_left_list[ind], text_list[ind], xy_off=[-30, -65])
 
     ############################
     colors += [0, 1]
